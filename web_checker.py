@@ -6,6 +6,9 @@ import requests
 from fake_useragent import UserAgent
 from http import HTTPStatus
 
+headers = {
+    "User-Agent" : "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/117.0"
+}
 
 def generate_csv():
     print("Please enter your website link. enter 'q' / 'Q' to end the entry.")
@@ -32,15 +35,17 @@ def generate_csv():
         return
 
 
-def get_user_agent():
-    ua = UserAgent()
-    return ua.firefox
+#def get_user_agent():
+#    ua = UserAgent()
+#    return ua.firefox
 
 
 def get_status_des(status_code):
     for value in HTTPStatus:
         if value == status_code:
-            description = f"({value} {value.name}), {value.descrition}"
+            description = f"({value} {value.name}), {value.description}"
+
+            return f"{description}"
 
     return "(???) Unknown Status Code!!!"
 
@@ -55,23 +60,31 @@ def get_websites(csv_path, choice):
             reader = csv.reader(file)
 
             for row in reader:
+                
                 if "address" in row[1].lower():
                     continue
+                if "https://" not in row[1] :
+                    if "http://" not in row[1]:
+                        row[1] = "https://"+row[1]
+                    else:
+                        row[1] = row[1][:4]+ "s" +row[1][4:]
                 websites.append(row[1])
 
     return websites
 
 
-def check_website(web_link:str, user_agent):
+def check_website(web_link):
     try:
-        code = int(requests.get(web_link, headers={"User-Agent":user_agent}).status_code)
+        
+        code = requests.get(web_link, headers=headers).status_code
+        code = int(code)
+        
+        print()
         print(web_link, get_status_des(code))
 
     except Exception:
         print(f"Could not get information for website: {web_link}")
 
-def get_user_agent():
-    ua = UserAgent()
 
 
 
@@ -88,12 +101,20 @@ def main():
         if num==1:
             new_csv = generate_csv()
             websites = get_websites("new_list.csv", 1)
+            
             print(websites)
+
+            for url in websites:
+                
+                check_website(url)
 
 
 
         if num==2:
-            pass
+            websites = get_websites("fahim.csv", 1)
+            print(websites)
+            for url in websites:
+                check_website(url)
 
 
     except ValueError:
